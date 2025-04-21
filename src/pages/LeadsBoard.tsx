@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import LeadDetailsModal, { LeadDetails } from '@/components/leads/LeadDetailsModal';
+import AddLeadModal from '@/components/leads/AddLeadModal';
 import { toast } from 'sonner';
 
 // Enhanced mock data structure with additional fields for details view
@@ -227,10 +228,42 @@ const LeadsBoard = () => {
   };
   
   const handleAddNewLead = () => {
-    toast.info("Add Lead functionality coming soon");
-    // Future implementation would open a form modal to add new lead
-    // setIsAddLeadModalOpen(true);
+    setIsAddLeadModalOpen(true);
   };
+
+  const handleAddLead = (newLead: any) => {
+    // Get the stage column based on the new lead's stage
+    const targetColumnId = Object.keys(data.columns).find(
+      columnId => data.columns[columnId].title === newLead.stage
+    ) || 'column-1'; // Default to first column if not found
+
+    // Update the leads object
+    const updatedLeads = {
+      ...data.leads,
+      [newLead.id]: newLead,
+    };
+
+    // Update the column's leadIds
+    const updatedColumn = {
+      ...data.columns[targetColumnId],
+      leadIds: [newLead.id, ...data.columns[targetColumnId].leadIds],
+    };
+
+    // Update the data state
+    setData({
+      ...data,
+      leads: updatedLeads,
+      columns: {
+        ...data.columns,
+        [targetColumnId]: updatedColumn,
+      },
+    });
+
+    toast.success(`New lead ${newLead.name} added successfully!`);
+  };
+
+  // Extract all stage titles for the dropdown
+  const stageOptions = data.columnOrder.map(columnId => data.columns[columnId].title);
 
   return (
     <div>
@@ -302,6 +335,14 @@ const LeadsBoard = () => {
         open={isLeadModalOpen}
         onClose={() => setIsLeadModalOpen(false)}
         lead={selectedLead}
+      />
+
+      {/* Add Lead Modal */}
+      <AddLeadModal
+        open={isAddLeadModalOpen}
+        onClose={() => setIsAddLeadModalOpen(false)}
+        onAddLead={handleAddLead}
+        stages={stageOptions}
       />
     </div>
   );
