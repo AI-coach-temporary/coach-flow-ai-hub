@@ -19,6 +19,14 @@ export default {
 		},
 		extend: {
 			colors: {
+				brand: {
+					primary: '#2563EB',
+					secondary: '#4F46E5',
+					accent: '#7C3AED',
+					light: '#EEF2FF',
+					dark: '#1E293B',
+				},
+			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
