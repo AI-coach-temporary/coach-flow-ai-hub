@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 const AIAssistant = () => {
   const [contentType, setContentType] = useState('instagram');
@@ -22,40 +23,119 @@ const AIAssistant = () => {
   ];
   
   const handleGenerate = () => {
+    if (!description.trim()) {
+      toast.error('Please enter a content description');
+      return;
+    }
+
     setIsGenerating(true);
+    
+    // Keywords to base content generation on
+    const keywords = description.split(' ').filter(word => word.length > 3);
+    const linkAnalysis = link ? `based on similar content from ${link}` : '';
     
     // Simulate AI generation with a timeout
     setTimeout(() => {
-      // Mock generated content based on selected tone
       let caption = '';
       let ideas: string[] = [];
       
+      // Generate dynamic content based on description and selected tone
       if (tone === 'professional') {
-        caption = "Unlock your team's full potential with these proven leadership strategies. In my latest coaching session, we explored how structured feedback loops can increase productivity by 37%. Want to transform your team dynamics? Book a discovery call (link in bio).\n\n#ExecutiveCoaching #LeadershipStrategies #BusinessGrowth";
-        ideas = [
-          "Create a carousel post showing 5 leadership principles with professional statistics",
-          "Record a short reel explaining one key leadership technique with a professional setting",
-          "Share a client success story focusing on measurable business outcomes"
-        ];
+        caption = generateProfessionalContent(description, keywords, linkAnalysis);
+        ideas = generateProfessionalIdeas(contentType, keywords);
       } else if (tone === 'inspiring') {
-        caption = "✨ Your journey to greatness begins with a single brave decision! Today I watched a client take that leap of faith and commit to their dreams. Remember: the universe rewards courage. What bold step will YOU take today? Comment below and let's inspire each other!\n\n#DreamBigger #PersonalGrowth #TransformationCoach";
-        ideas = [
-          "Create an inspirational quote carousel with vibrant backgrounds and uplifting messages",
-          "Film a motivational reel with an energetic delivery and inspiring background music",
-          "Share your personal transformation story with before/after context"
-        ];
+        caption = generateInspiringContent(description, keywords, linkAnalysis);
+        ideas = generateInspiringIdeas(contentType, keywords);
       } else {
-        caption = "Okay let's be real... who else's 'productivity system' looks like 27 forgotten sticky notes and a prayer? 🙋‍♀️😂 No judgment here! In today's coaching session we tackled the chaos with some actually-fun organizing hacks that won't make you want to throw your planner out the window!\n\n#KeepingItReal #ProductivityTips #LifeCoachHumor";
-        ideas = [
-          "Create a humorous reel showing 'expectation vs reality' of productivity systems",
-          "Post a casual selfie with your 'organized mess' and a relatable caption",
-          "Share a behind-the-scenes blooper from your coaching session with a funny caption"
-        ];
+        caption = generatePlayfulContent(description, keywords, linkAnalysis);
+        ideas = generatePlayfulIdeas(contentType, keywords);
       }
       
       setGeneratedContent({ caption, ideas });
       setIsGenerating(false);
+      toast.success('Content generated successfully!');
     }, 2000);
+  };
+
+  const generateProfessionalContent = (description: string, keywords: string[], linkAnalysis: string) => {
+    const industryTerms = ['strategy', 'growth', 'leadership', 'success', 'productivity', 'business', 'coaching'];
+    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'professional';
+    const randomTerm = industryTerms[Math.floor(Math.random() * industryTerms.length)];
+    
+    return `Unlock your full potential with these evidence-based ${usedKeyword} strategies ${linkAnalysis}. In my latest coaching session, we explored how implementing structured approaches can increase ${randomTerm} by 37%. Want to transform your results? Book a discovery call (link in bio).\n\n#Executive${randomTerm.charAt(0).toUpperCase() + randomTerm.slice(1)} #${usedKeyword.charAt(0).toUpperCase() + usedKeyword.slice(1)}Strategies #BusinessGrowth`;
+  };
+  
+  const generateInspiringContent = (description: string, keywords: string[], linkAnalysis: string) => {
+    const inspiringTerms = ['journey', 'transformation', 'breakthrough', 'dream', 'vision', 'passion', 'purpose'];
+    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'journey';
+    const randomTerm = inspiringTerms[Math.floor(Math.random() * inspiringTerms.length)];
+    
+    return `✨ Your ${usedKeyword} to greatness begins with a single brave decision! ${linkAnalysis} Today I witnessed a client achieve an incredible ${randomTerm} after committing to their vision. Remember: the universe rewards courage. What bold step will YOU take today? Comment below and let's inspire each other!\n\n#Dream${usedKeyword.charAt(0).toUpperCase() + usedKeyword.slice(1)} #PersonalGrowth #TransformationCoach`;
+  };
+  
+  const generatePlayfulContent = (description: string, keywords: string[], linkAnalysis: string) => {
+    const playfulTerms = ['chaos', 'adventure', 'laughs', 'reality', 'struggle', 'journey', 'plot twist'];
+    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'adventure';
+    const randomTerm = playfulTerms[Math.floor(Math.random() * playfulTerms.length)];
+    
+    return `Okay let's be real... who else's ${usedKeyword} looks like complete ${randomTerm} with a side of "I'll figure it out tomorrow"? 🙋‍♀️😂 ${linkAnalysis} No judgment here! In today's session we tackled the mess with some actually-fun strategies that won't make you want to throw your planner out the window!\n\n#KeepingItReal #${usedKeyword.charAt(0).toUpperCase() + usedKeyword.slice(1)}Tips #CoachHumor`;
+  };
+  
+  const generateProfessionalIdeas = (contentType: string, keywords: string[]) => {
+    const baseIdeas = [
+      "Create a carousel post showing 5 key principles with professional statistics",
+      "Record a short video explaining one key technique with a professional setting",
+      "Share a client success story focusing on measurable outcomes"
+    ];
+    
+    if (keywords.length > 0) {
+      return baseIdeas.map(idea => {
+        const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+        return idea.replace(/key|professional|success/g, match => randomKeyword);
+      });
+    }
+    
+    return baseIdeas;
+  };
+  
+  const generateInspiringIdeas = (contentType: string, keywords: string[]) => {
+    const baseIdeas = [
+      "Create an inspirational quote carousel with vibrant backgrounds and uplifting messages",
+      "Film a motivational video with an energetic delivery and inspiring background music",
+      "Share your personal transformation story with before/after context"
+    ];
+    
+    if (keywords.length > 0) {
+      return baseIdeas.map(idea => {
+        const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+        return idea.replace(/inspirational|motivational|transformation/g, match => randomKeyword);
+      });
+    }
+    
+    return baseIdeas;
+  };
+  
+  const generatePlayfulIdeas = (contentType: string, keywords: string[]) => {
+    const baseIdeas = [
+      "Create a humorous reel showing 'expectation vs reality' scenarios",
+      "Post a casual selfie with your 'organized mess' and a relatable caption",
+      "Share a behind-the-scenes blooper from your coaching session with a funny caption"
+    ];
+    
+    if (keywords.length > 0) {
+      return baseIdeas.map(idea => {
+        const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+        return idea.replace(/humorous|organized|coaching/g, match => randomKeyword);
+      });
+    }
+    
+    return baseIdeas;
+  };
+
+  const handleSaveContent = () => {
+    if (generatedContent) {
+      toast.success('Content saved to your library!');
+    }
   };
   
   return (
@@ -169,7 +249,10 @@ const AIAssistant = () => {
                 <div className="p-4 bg-gray-50 rounded-md">
                   <p className="whitespace-pre-line">{generatedContent.caption}</p>
                 </div>
-                <Button variant="outline" className="mt-2 text-xs" onClick={() => navigator.clipboard.writeText(generatedContent.caption)}>
+                <Button variant="outline" className="mt-2 text-xs" onClick={() => {
+                  navigator.clipboard.writeText(generatedContent.caption);
+                  toast.success('Caption copied to clipboard!');
+                }}>
                   Copy Caption
                 </Button>
               </div>
@@ -185,7 +268,7 @@ const AIAssistant = () => {
                 </ul>
               </div>
               
-              <Button className="w-full" variant="outline">
+              <Button className="w-full" variant="outline" onClick={handleSaveContent}>
                 Save to Content Library
               </Button>
             </div>

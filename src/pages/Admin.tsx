@@ -1,12 +1,19 @@
 
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import AddUserModal from '@/components/admin/AddUserModal';
+import type { User } from '@/components/admin/AddUserModal';
 
 const Admin = () => {
+  // Modal state
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  
   // Mock user data
-  const users = [
+  const [users, setUsers] = useState<User[]>([
     {
       id: 1,
       name: 'John Preacher',
@@ -39,7 +46,7 @@ const Admin = () => {
       status: 'Active',
       lastLogin: 'Today, 8:05 AM',
     },
-  ];
+  ]);
 
   // Mock platform stats
   const platformStats = [
@@ -48,6 +55,21 @@ const Admin = () => {
     { label: 'Active Campaigns', value: '12', change: '+2' },
     { label: 'Storage Used', value: '1.2GB', change: '+120MB' },
   ];
+  
+  const handleAddUser = (newUser: Omit<User, 'id' | 'lastLogin'>) => {
+    const user: User = {
+      ...newUser,
+      id: users.length + 1,
+      lastLogin: 'Never'
+    };
+    
+    setUsers([...users, user]);
+    toast.success(`User ${user.name} has been added successfully!`);
+  };
+  
+  const handleEditUser = (userId: number) => {
+    toast.info(`Editing user ${userId} - Feature coming soon`);
+  };
 
   return (
     <div>
@@ -56,7 +78,10 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-gray-900">Admin Portal</h1>
           <p className="text-gray-600">Manage users and platform settings</p>
         </div>
-        <Button className="bg-brand-primary hover:bg-brand-secondary">
+        <Button 
+          className="bg-brand-primary hover:bg-brand-secondary"
+          onClick={() => setIsAddUserModalOpen(true)}
+        >
           + Add New User
         </Button>
       </div>
@@ -123,7 +148,9 @@ const Admin = () => {
                       </td>
                       <td>{user.lastLogin}</td>
                       <td className="text-right">
-                        <Button variant="ghost" size="sm">Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditUser(user.id)}>
+                          Edit
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -357,6 +384,12 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </Card>
+      
+      <AddUserModal 
+        open={isAddUserModalOpen} 
+        onClose={() => setIsAddUserModalOpen(false)}
+        onAddUser={handleAddUser}
+      />
     </div>
   );
 };

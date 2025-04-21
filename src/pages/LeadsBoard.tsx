@@ -3,17 +3,110 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import LeadDetailsModal, { LeadDetails } from '@/components/leads/LeadDetailsModal';
+import { toast } from 'sonner';
 
-// Mock data structure
-const initialData = {
-  leads: {
-    'lead-1': { id: 'lead-1', name: 'Sarah Johnson', email: 'sarah@example.com', value: '$2,500', lastContact: '2 days ago' },
-    'lead-2': { id: 'lead-2', name: 'Michael Brown', email: 'michael@example.com', value: '$3,800', lastContact: '5 days ago' },
-    'lead-3': { id: 'lead-3', name: 'Jessica Williams', email: 'jessica@example.com', value: '$1,500', lastContact: '1 day ago' },
-    'lead-4': { id: 'lead-4', name: 'David Miller', email: 'david@example.com', value: '$5,000', lastContact: '3 days ago' },
-    'lead-5': { id: 'lead-5', name: 'Emma Davis', email: 'emma@example.com', value: '$4,200', lastContact: '1 week ago' },
-    'lead-6': { id: 'lead-6', name: 'James Wilson', email: 'james@example.com', value: '$3,000', lastContact: 'Today' },
+// Enhanced mock data structure with additional fields for details view
+const initialLeadsData = {
+  'lead-1': {
+    id: 'lead-1',
+    name: 'Sarah Johnson', 
+    email: 'sarah@example.com',
+    phone: '(555) 123-4567', 
+    value: '$2,500',
+    lastContact: '2 days ago',
+    stage: 'New Leads',
+    source: 'Website Contact Form',
+    notes: [
+      'Initial consultation scheduled for next week',
+      'Interested in business growth coaching packages'
+    ],
+    tasks: [
+      { id: 1, task: 'Send welcome email', dueDate: 'Today', completed: true },
+      { id: 2, task: 'Schedule discovery call', dueDate: 'Apr 23, 2025', completed: false }
+    ]
   },
+  'lead-2': {
+    id: 'lead-2',
+    name: 'Michael Brown', 
+    email: 'michael@example.com',
+    phone: '(555) 234-5678', 
+    value: '$3,800',
+    lastContact: '5 days ago',
+    stage: 'New Leads',
+    source: 'LinkedIn Ad',
+    notes: [
+      'Responded positively to follow-up email'
+    ],
+    tasks: [
+      { id: 1, task: 'Send case studies', dueDate: 'Apr 22, 2025', completed: false }
+    ]
+  },
+  'lead-3': {
+    id: 'lead-3',
+    name: 'Jessica Williams', 
+    email: 'jessica@example.com',
+    phone: '(555) 345-6789', 
+    value: '$1,500',
+    lastContact: '1 day ago',
+    stage: 'Contacted',
+    source: 'Referral',
+    notes: [
+      'Discussed leadership coaching options',
+      'Has a team of 12 people to manage'
+    ],
+    tasks: [
+      { id: 1, task: 'Prepare proposal', dueDate: 'Apr 25, 2025', completed: false }
+    ]
+  },
+  'lead-4': {
+    id: 'lead-4',
+    name: 'David Miller', 
+    email: 'david@example.com',
+    phone: '(555) 456-7890', 
+    value: '$5,000',
+    lastContact: '3 days ago',
+    stage: 'Contacted',
+    source: 'Webinar Attendee',
+    notes: [],
+    tasks: []
+  },
+  'lead-5': {
+    id: 'lead-5',
+    name: 'Emma Davis', 
+    email: 'emma@example.com',
+    phone: '(555) 567-8901', 
+    value: '$4,200',
+    lastContact: '1 week ago',
+    stage: 'Meeting Scheduled',
+    source: 'Instagram Ad',
+    notes: [
+      'Meeting scheduled for Friday at 2pm'
+    ],
+    tasks: [
+      { id: 1, task: 'Prepare presentation', dueDate: 'Apr 21, 2025', completed: false }
+    ]
+  },
+  'lead-6': {
+    id: 'lead-6',
+    name: 'James Wilson', 
+    email: 'james@example.com',
+    value: '$3,000',
+    lastContact: 'Today',
+    stage: 'Proposal Sent',
+    source: 'Newsletter Signup',
+    notes: [
+      'Sent proposal for 3-month coaching package'
+    ],
+    tasks: [
+      { id: 1, task: 'Follow up on proposal', dueDate: 'Apr 26, 2025', completed: false }
+    ]
+  },
+};
+
+// Initial data structure
+const initialData = {
+  leads: initialLeadsData,
   columns: {
     'column-1': {
       id: 'column-1',
@@ -46,7 +139,10 @@ const initialData = {
 
 const LeadsBoard = () => {
   const [data, setData] = useState(initialData);
-
+  const [selectedLead, setSelectedLead] = useState<LeadDetails | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+  
   const onDragEnd = (result: any) => {
     const { destination, source, draggableId } = result;
 
@@ -101,15 +197,39 @@ const LeadsBoard = () => {
       leadIds: finishLeadIds,
     };
 
+    // Update the lead's stage in the leads object
+    const updatedLeads = {
+      ...data.leads,
+      [draggableId]: {
+        ...data.leads[draggableId],
+        stage: finish.title
+      }
+    };
+
     const newState = {
       ...data,
+      leads: updatedLeads,
       columns: {
         ...data.columns,
         [newStart.id]: newStart,
         [newFinish.id]: newFinish,
       },
     };
+    
     setData(newState);
+    toast.success(`Lead moved to ${finish.title}`);
+  };
+  
+  const handleLeadClick = (leadId: string) => {
+    const lead = data.leads[leadId];
+    setSelectedLead(lead);
+    setIsLeadModalOpen(true);
+  };
+  
+  const handleAddNewLead = () => {
+    toast.info("Add Lead functionality coming soon");
+    // Future implementation would open a form modal to add new lead
+    // setIsAddLeadModalOpen(true);
   };
 
   return (
@@ -119,7 +239,10 @@ const LeadsBoard = () => {
           <h1 className="text-3xl font-bold text-gray-900">Leads Board</h1>
           <p className="text-gray-600">Manage and track your leads through the sales pipeline</p>
         </div>
-        <Button className="bg-brand-primary hover:bg-brand-secondary">
+        <Button 
+          className="bg-brand-primary hover:bg-brand-secondary"
+          onClick={handleAddNewLead}
+        >
           + Add New Lead
         </Button>
       </div>
@@ -149,7 +272,8 @@ const LeadsBoard = () => {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className="p-4 mb-3 hover:shadow-md"
+                              className="p-4 mb-3 hover:shadow-md cursor-pointer"
+                              onClick={() => handleLeadClick(lead.id)}
                             >
                               <div>
                                 <h3 className="font-semibold text-brand-primary">{lead.name}</h3>
@@ -172,6 +296,13 @@ const LeadsBoard = () => {
           })}
         </div>
       </DragDropContext>
+      
+      {/* Lead Details Modal */}
+      <LeadDetailsModal
+        open={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        lead={selectedLead}
+      />
     </div>
   );
 };

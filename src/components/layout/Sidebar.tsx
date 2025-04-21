@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
+  const location = useLocation();
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Leads', icon: <Kanban size={20} />, path: '/leads' },
@@ -26,7 +27,7 @@ const Sidebar = () => {
     <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
       <div className="p-6">
         <h1 className="text-xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
-          CoachFlow AI Hub
+          Expansions AI Hub
         </h1>
       </div>
       <div className="flex-1 overflow-auto py-4">
@@ -35,7 +36,9 @@ const Sidebar = () => {
             <Link
               to={item.path}
               key={item.name}
-              className="flex items-center gap-3 px-3 py-2 mt-2 text-gray-700 rounded-md hover:bg-brand-light hover:text-brand-primary"
+              className={`flex items-center gap-3 px-3 py-2 mt-2 text-gray-700 rounded-md hover:bg-brand-light hover:text-brand-primary ${
+                location.pathname === item.path ? 'bg-brand-light text-brand-primary' : ''
+              }`}
             >
               {item.icon}
               <span>{item.name}</span>
