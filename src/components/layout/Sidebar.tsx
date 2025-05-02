@@ -7,11 +7,16 @@ import {
   MessageSquare, 
   BarChart, 
   Settings,
-  Kanban
+  Kanban,
+  LogOut
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
     { name: 'Leads', icon: <Kanban size={20} />, path: '/leads' },
@@ -22,6 +27,10 @@ const Sidebar = () => {
     { name: 'AI Assistant', icon: <Settings size={20} />, path: '/ai-assistant' },
     { name: 'Admin', icon: <Settings size={20} />, path: '/admin' },
   ];
+
+  const handleSignOut = () => {
+    signOut();
+  };
 
   return (
     <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
@@ -49,12 +58,20 @@ const Sidebar = () => {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3 px-3 py-2">
           <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
-            JP
+            {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div>
-            <p className="text-sm font-medium">John Preacher</p>
+          <div className="flex-1">
+            <p className="text-sm font-medium">{user?.email || 'User'}</p>
             <p className="text-xs text-gray-500">Coach Account</p>
           </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleSignOut}
+            title="Sign Out"
+          >
+            <LogOut size={18} />
+          </Button>
         </div>
       </div>
     </div>
