@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface AddLeadModalProps {
   open: boolean;
@@ -23,8 +25,10 @@ const AddLeadModal = ({ open, onClose, onAddLead, stages }: AddLeadModalProps) =
   const [stage, setStage] = useState('New Leads');
   const [source, setSource] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !email) {
@@ -38,42 +42,65 @@ const AddLeadModal = ({ open, onClose, onAddLead, stages }: AddLeadModalProps) =
       return;
     }
 
-    // Clean and validate value (should be a number with $ sign)
-    const numericValue = value.replace(/[^0-9.]/g, '');
-    if (!numericValue) {
-      toast.error("Please enter a valid lead value");
-      return;
-    }
+    setIsSubmitting(true);
 
-    const formattedValue = `$${parseFloat(numericValue).toLocaleString()}`;
-    
-    // Create a new lead object
-    const newLead = {
-      id: `lead-${Date.now()}`,
-      name,
-      email,
-      phone: phone || undefined,
-      value: formattedValue,
-      lastContact: 'Today',
-      stage,
-      source: source || undefined,
-      notes: notes ? [notes] : [],
-      tasks: []
-    };
-    
-    onAddLead(newLead);
-    
-    // Reset form
-    setName('');
-    setEmail('');
-    setPhone('');
-    setValue('');
-    setStage('New Leads');
-    setSource('');
-    setNotes('');
-    
-    // Close modal
-    onClose();
+    try {
+      // Save to Supabase
+      const { data, error } = await supabase
+        .from('leads')
+        .insert([
+          { 
+            name,
+            email,
+            phone: phone || null,
+            notes,
+            status: stage.toLowerCase().replace(' ', '_'),
+            user_id: user?.id
+          }
+        ])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      // Clean and validate value (should be a number with $ sign)
+      const numericValue = value.replace(/[^0-9.]/g, '');
+      const formattedValue = numericValue ? `$${parseFloat(numericValue).toLocaleString()}` : '$0';
+      
+      // Create a new lead object for the UI
+      const newLead = {
+        id: data[0].id,
+        name,
+        email,
+        phone: phone || undefined,
+        value: formattedValue,
+        lastContact: 'Today',
+        stage,
+        source: source || undefined,
+        notes: notes ? [notes] : [],
+        tasks: []
+      };
+      
+      onAddLead(newLead);
+      toast.success("Lead added successfully!");
+      
+      // Reset form
+      setName('');
+      setEmail('');
+      setPhone('');
+      setValue('');
+      setStage('New Leads');
+      setSource('');
+      setNotes('');
+      
+      // Close modal
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add lead");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -170,10 +197,12 @@ const AddLeadModal = ({ open, onClose, onAddLead, stages }: AddLeadModalProps) =
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Add Lead</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Adding..." : "Add Lead"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
