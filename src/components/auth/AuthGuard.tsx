@@ -8,7 +8,7 @@ interface AuthGuardProps {
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, bypassAuth } = useAuth();
   
   if (loading) {
     return (
@@ -18,11 +18,12 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
   
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  // Allow access if auth is bypassed or the user is logged in
+  if (bypassAuth || user) {
+    return <>{children}</>;
   }
   
-  return <>{children}</>;
+  return <Navigate to="/login" replace />;
 };
 
 export default AuthGuard;

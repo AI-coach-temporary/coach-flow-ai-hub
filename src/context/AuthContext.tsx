@@ -5,10 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Set this to true to bypass authentication requirements
+const BYPASS_AUTH = true; // TODO: Move to environment variable when ready
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  bypassAuth: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -100,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         session,
         loading,
+        bypassAuth: BYPASS_AUTH,
         signIn,
         signUp,
         signOut
