@@ -23,25 +23,35 @@ serve(async (req) => {
       );
     }
 
-    // Call OpenAI API for image generation
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    // Call Anthropic API for image generation
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY'),
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: "dall-e-2",
-        prompt: prompt,
-        n: 1,
-        size: "1024x1024",
-        response_format: "url"
+        model: "claude-3-opus-20240229",
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Generate a detailed image of: ${prompt}. Please respond with valid JSON only containing a direct image URL as an imageUrl key. Do not include any other explanations or instructions.`
+              }
+            ]
+          }
+        ],
+        system: "You are an AI assistant that specializes in generating image descriptions. Your task is to convert user prompts into detailed image links formatted as valid JSON with an imageUrl key. Your JSON response should only contain the imageUrl key with a URL value. No explanations, just a valid JSON object."
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
+      console.error("Anthropic API error:", errorData);
       return new Response(
         JSON.stringify({ error: 'Image generation failed', details: errorData }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
@@ -49,9 +59,43 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log("Anthropic response:", data);
+    
+    // Extract the content from Claude's response
+    if (data.content && data.content.length > 0) {
+      const messageContent = data.content[0].text;
+      
+      // Try to extract a URL from the response
+      try {
+        // Parse the JSON content from Claude
+        const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsedJson = JSON.parse(jsonMatch[0]);
+          if (parsedJson.imageUrl) {
+            return new Response(
+              JSON.stringify({ imageUrl: parsedJson.imageUrl }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+        
+        // If we couldn't parse JSON or find imageUrl, look for a URL in the text
+        const urlMatch = messageContent.match(/https?:\/\/[^\s"']+/);
+        if (urlMatch) {
+          return new Response(
+            JSON.stringify({ imageUrl: urlMatch[0] }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (error) {
+        console.error("Error parsing Claude response:", error);
+      }
+    }
+    
+    // If we couldn't find a valid image URL, return an error
     return new Response(
-      JSON.stringify({ imageUrl: data.data[0].url }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Could not extract image URL from Anthropic response' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   } catch (error) {
     console.error('Error:', error);
