@@ -1,17 +1,22 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Instagram, Video } from 'lucide-react';
 
-// Import our new components
+// Import our components
 import ContentAnalysis from '@/components/ai-assistant/ContentAnalysis';
 import ContentResult from '@/components/ai-assistant/ContentResult';
+import ContentForm from '@/components/ai-assistant/ContentForm';
+
+// Import our utility functions
+import { 
+  generateProfessionalContent, 
+  generateInspiringContent,
+  generatePlayfulContent,
+  generateProfessionalHashtags,
+  generateInspiringHashtags,
+  generatePlayfulHashtags
+} from '@/components/ai-assistant/utils/contentGenerators';
 
 const AIAssistant = () => {
   const [contentType, setContentType] = useState('instagram');
@@ -38,12 +43,6 @@ const AIAssistant = () => {
     reelScript?: string[];
     ideas?: string[];
   }>(null);
-  
-  const tones = [
-    { id: 'professional', label: 'Professional & Authoritative', description: 'Polished, expert-oriented content for business coaches and consultants' },
-    { id: 'inspiring', label: 'Inspiring & Motivational', description: 'Uplifting, encouraging content to inspire action and positive change' },
-    { id: 'playful', label: 'Playful & Casual', description: 'Fun, relaxed content with personality and conversational style' },
-  ];
   
   // Handle analysis of reference content
   const handleAnalyzeReference = () => {
@@ -164,72 +163,6 @@ const AIAssistant = () => {
     }, 2000);
   };
 
-  const generateProfessionalContent = (description: string, keywords: string[]) => {
-    const industryTerms = ['strategy', 'growth', 'leadership', 'success', 'productivity', 'business', 'coaching'];
-    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'professional';
-    const randomTerm = industryTerms[Math.floor(Math.random() * industryTerms.length)];
-    
-    return `Unlock your full potential with these evidence-based ${usedKeyword} strategies that drive results. In my latest coaching session, we explored how implementing structured approaches can increase ${randomTerm} by 37%.\n\nThe key insight? Success leaves clues. By analyzing the patterns of high-performers in your industry, you can adapt their frameworks to your unique situation.\n\nWant to transform your results? Book a discovery call (link in bio) and let's create your customized ${randomTerm} roadmap.`;
-  };
-  
-  const generateInspiringContent = (description: string, keywords: string[]) => {
-    const inspiringTerms = ['journey', 'transformation', 'breakthrough', 'dream', 'vision', 'passion', 'purpose'];
-    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'journey';
-    const randomTerm = inspiringTerms[Math.floor(Math.random() * inspiringTerms.length)];
-    
-    return `✨ Your ${usedKeyword} to greatness begins with a single brave decision! Today I witnessed a client achieve an incredible ${randomTerm} after committing to their vision despite all the doubts.\n\nRemember: the universe rewards courage. The path might not be clear yet, but that first step changes everything.\n\nWhat bold step will YOU take today? Comment below and let's inspire each other!`;
-  };
-  
-  const generatePlayfulContent = (description: string, keywords: string[]) => {
-    const playfulTerms = ['chaos', 'adventure', 'laughs', 'reality', 'struggle', 'journey', 'plot twist'];
-    const usedKeyword = keywords.length > 0 ? keywords[Math.floor(Math.random() * keywords.length)] : 'adventure';
-    const randomTerm = playfulTerms[Math.floor(Math.random() * playfulTerms.length)];
-    
-    return `Okay let's be real... who else's ${usedKeyword} looks like complete ${randomTerm} with a side of "I'll figure it out tomorrow"? 🙋‍♀️😂\n\nNo judgment here! In today's coaching session we tackled the mess with some actually-fun strategies that won't make you want to throw your planner out the window!\n\nPro tip: Sometimes the most productive thing you can do is take a nap. Seriously. Science backs me up on this one. ✨`;
-  };
-  
-  const generateProfessionalHashtags = (keywords: string[]) => {
-    const baseHashtags = ['#ExecutiveCoaching', '#BusinessGrowth', '#LeadershipDevelopment', '#SuccessStrategies'];
-    
-    if (keywords.length > 0) {
-      const additionalTags = keywords
-        .slice(0, 3)
-        .map(word => `#${word.charAt(0).toUpperCase() + word.slice(1)}`);
-      
-      return [...baseHashtags, ...additionalTags];
-    }
-    
-    return baseHashtags;
-  };
-  
-  const generateInspiringHashtags = (keywords: string[]) => {
-    const baseHashtags = ['#PersonalGrowth', '#TransformationJourney', '#MindsetShift', '#DreamBigger'];
-    
-    if (keywords.length > 0) {
-      const additionalTags = keywords
-        .slice(0, 3)
-        .map(word => `#${word.charAt(0).toUpperCase() + word.slice(1)}Journey`);
-      
-      return [...baseHashtags, ...additionalTags];
-    }
-    
-    return baseHashtags;
-  };
-  
-  const generatePlayfulHashtags = (keywords: string[]) => {
-    const baseHashtags = ['#KeepingItReal', '#CoachHumor', '#EntrepreneurLife', '#ThatsHowWeRoll'];
-    
-    if (keywords.length > 0) {
-      const additionalTags = keywords
-        .slice(0, 3)
-        .map(word => `#${word.charAt(0).toUpperCase() + word.slice(1)}Problems`);
-      
-      return [...baseHashtags, ...additionalTags];
-    }
-    
-    return baseHashtags;
-  };
-
   return (
     <div>
       <div className="flex items-center mb-6">
@@ -242,105 +175,25 @@ const AIAssistant = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Content Generator</h2>
-          
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="contentType" className="text-base font-medium">Content Type</Label>
-              <div className="flex gap-4 mt-2">
-                <Button
-                  type="button"
-                  onClick={() => setContentType('instagram')}
-                  variant={contentType === 'instagram' ? 'default' : 'outline'}
-                  className={contentType === 'instagram' ? 'bg-brand-primary hover:bg-brand-secondary' : ''}
-                >
-                  <Instagram className="mr-2 h-4 w-4" />
-                  Instagram Post
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setContentType('reel')}
-                  variant={contentType === 'reel' ? 'default' : 'outline'}
-                  className={contentType === 'reel' ? 'bg-brand-primary hover:bg-brand-secondary' : ''}
-                >
-                  <Video className="mr-2 h-4 w-4" />
-                  Reel Script
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="link">Reference Post URL</Label>
-              <div className="flex gap-2">
-                <Input 
-                  id="link" 
-                  placeholder="https://www.instagram.com/p/example" 
-                  value={link}
-                  onChange={e => setLink(e.target.value)}
-                  className="flex-grow"
-                />
-                <Button 
-                  onClick={handleAnalyzeReference}
-                  disabled={isAnalyzing || !link.trim()} 
-                  variant="outline"
-                >
-                  {isAnalyzing ? 'Analyzing...' : 'Analyze'}
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                Paste a link to an Instagram post you'd like to use as reference
-              </p>
-            </div>
-            
-            {analysisData && (
-              <ContentAnalysis 
-                analysisData={analysisData}
-                isLoading={isAnalyzing}
-              />
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Content Description or Keywords</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Briefly describe what you want to post about..." 
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <Label className="text-base font-medium">Voice Style</Label>
-              <RadioGroup value={tone} onValueChange={setTone} className="space-y-3">
-                {tones.map(toneOption => (
-                  <div key={toneOption.id} className="flex items-start space-x-2">
-                    <RadioGroupItem value={toneOption.id} id={toneOption.id} />
-                    <div className="grid gap-1">
-                      <Label htmlFor={toneOption.id} className="font-medium">
-                        {toneOption.label}
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        {toneOption.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-            
-            <Button 
-              onClick={handleGenerate}
-              disabled={isGenerating || !description.trim()} 
-              className="w-full bg-brand-primary hover:bg-brand-secondary"
-            >
-              {isGenerating ? 'Generating...' : 'Generate Content'}
-            </Button>
-          </div>
+          <ContentForm 
+            contentType={contentType}
+            setContentType={setContentType}
+            link={link}
+            setLink={setLink}
+            description={description}
+            setDescription={setDescription}
+            tone={tone}
+            setTone={setTone}
+            isAnalyzing={isAnalyzing}
+            handleAnalyzeReference={handleAnalyzeReference}
+            analysisData={analysisData}
+            isGenerating={isGenerating}
+            handleGenerate={handleGenerate}
+          />
         </Card>
         
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Generated Content</h2>
-          
           <ContentResult 
             generatedContent={generatedContent}
             isLoading={isGenerating}
