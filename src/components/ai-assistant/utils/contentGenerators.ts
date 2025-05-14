@@ -66,3 +66,16 @@ export const generatePlayfulHashtags = (keywords: string[]): string[] => {
   
   return baseHashtags;
 };
+
+export const generateImagePrompt = (description: string, tone: string, keywords: string[]): string => {
+  const keywordsText = keywords.length > 0 ? keywords.join(', ') : description;
+  const aspectRatio = "4:5"; // Instagram optimal ratio
+  
+  if (tone === 'professional') {
+    return `Create a professional, polished Instagram post image featuring ${keywordsText}. Use a clean, corporate aesthetic with blues and grays, perfect lighting, and minimalist design elements. The composition should be sophisticated and aspirational, suitable for business coaching. ${aspectRatio} aspect ratio, high quality, photorealistic.`;
+  } else if (tone === 'inspiring') {
+    return `Create an inspirational Instagram post image representing ${keywordsText}. Use warm golden hour lighting, vibrant colors, uplifting imagery of nature or achievement, and motivational atmosphere. The image should evoke hope and possibility. ${aspectRatio} aspect ratio, high quality, photorealistic.`;
+  } else {
+    return `Create a playful and casual Instagram post image related to ${keywordsText}. Use bright colors, fun patterns, candid-style photography, and authentic moments. The image should feel relatable and lighthearted with a touch of humor. ${aspectRatio} aspect ratio, high quality, photorealistic.`;
+  }
+};

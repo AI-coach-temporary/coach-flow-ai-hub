@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js';
 
 // Import our components
 import ContentAnalysis from '@/components/ai-assistant/ContentAnalysis';
@@ -15,8 +16,14 @@ import {
   generatePlayfulContent,
   generateProfessionalHashtags,
   generateInspiringHashtags,
-  generatePlayfulHashtags
+  generatePlayfulHashtags,
+  generateImagePrompt
 } from '@/components/ai-assistant/utils/contentGenerators';
+
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const AIAssistant = () => {
   const [contentType, setContentType] = useState('instagram');
@@ -26,6 +33,7 @@ const AIAssistant = () => {
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   const [analysisData, setAnalysisData] = useState<null | {
     toneScore: number;
@@ -42,6 +50,7 @@ const AIAssistant = () => {
     image?: string;
     reelScript?: string[];
     ideas?: string[];
+    imagePrompt?: string;
   }>(null);
   
   // Handle analysis of reference content
@@ -78,7 +87,31 @@ const AIAssistant = () => {
     }, 1500);
   };
   
-  const handleGenerate = () => {
+  const generateImage = async (imagePrompt: string) => {
+    setIsGeneratingImage(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt: imagePrompt }
+      });
+      
+      if (error) {
+        console.error('Error generating image:', error);
+        toast.error('Failed to generate image. Please try again.');
+        return null;
+      }
+      
+      return data.imageUrl;
+    } catch (error) {
+      console.error('Error calling image generation function:', error);
+      toast.error('Failed to generate image. Please try again.');
+      return null;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+  
+  const handleGenerate = async () => {
     if (!description.trim()) {
       toast.error('Please enter a content description');
       return;
@@ -89,19 +122,17 @@ const AIAssistant = () => {
     // Keywords to base content generation on
     const keywords = description.split(' ').filter(word => word.length > 3);
     
-    // Simulate AI generation with a timeout - this would be an API call in production
-    setTimeout(() => {
+    try {
       let caption = '';
       let hashtags: string[] = [];
-      let image: string | undefined;
       let reelScript: string[] | undefined;
       let ideas: string[] | undefined;
+      let imagePrompt = '';
       
       // Generate dynamic content based on description and selected tone
       if (tone === 'professional') {
         caption = generateProfessionalContent(description, keywords);
         hashtags = generateProfessionalHashtags(keywords);
-        image = "https://images.unsplash.com/photo-1552581234-26160f608093?q=80&w=1000"; // Placeholder image
         
         if (contentType === 'reel') {
           reelScript = [
@@ -117,10 +148,11 @@ const AIAssistant = () => {
           "Record a short testimonial video from a recent client success story",
           "Share a behind-the-scenes look at your coaching methodology"
         ];
+        
+        imagePrompt = generateImagePrompt(description, 'professional', keywords);
       } else if (tone === 'inspiring') {
         caption = generateInspiringContent(description, keywords);
         hashtags = generateInspiringHashtags(keywords);
-        image = "https://images.unsplash.com/photo-1494178270175-e96de2971df9?q=80&w=1000"; // Placeholder image
         
         if (contentType === 'reel') {
           reelScript = [
@@ -136,10 +168,11 @@ const AIAssistant = () => {
           "Film a motivational morning routine video showing how you prepare for success",
           "Share a personal transformation story connected to your coaching philosophy"
         ];
+        
+        imagePrompt = generateImagePrompt(description, 'inspiring', keywords);
       } else {
         caption = generatePlayfulContent(description, keywords);
         hashtags = generatePlayfulHashtags(keywords);
-        image = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000"; // Placeholder image
         
         if (contentType === 'reel') {
           reelScript = [
@@ -155,12 +188,40 @@ const AIAssistant = () => {
           "Share a casual behind-the-scenes blooper from your last workshop",
           "Post a day-in-the-life sequence with funny captions about entrepreneurship challenges"
         ];
+        
+        imagePrompt = generateImagePrompt(description, 'playful', keywords);
       }
       
-      setGeneratedContent({ caption, hashtags, image, reelScript, ideas });
-      setIsGenerating(false);
+      // Store initial content without image
+      setGeneratedContent({
+        caption,
+        hashtags,
+        reelScript,
+        ideas,
+        imagePrompt
+      });
+      
+      // Generate image
+      const imageUrl = await generateImage(imagePrompt);
+      
+      // Update content with image
+      setGeneratedContent(prevContent => {
+        if (prevContent) {
+          return {
+            ...prevContent,
+            image: imageUrl || undefined
+          };
+        }
+        return null;
+      });
+      
       toast.success('Content generated successfully!');
-    }, 2000);
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast.error('Failed to generate content. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -196,7 +257,7 @@ const AIAssistant = () => {
           <h2 className="text-xl font-semibold mb-4">Generated Content</h2>
           <ContentResult 
             generatedContent={generatedContent}
-            isLoading={isGenerating}
+            isLoading={isGenerating || isGeneratingImage}
           />
         </Card>
       </div>

@@ -12,6 +12,7 @@ interface ContentResultProps {
     image?: string;
     reelScript?: string[];
     ideas?: string[];
+    imagePrompt?: string;
   } | null;
   isLoading: boolean;
 }
@@ -39,7 +40,7 @@ const ContentResult: React.FC<ContentResultProps> = ({
     );
   }
 
-  const { caption, hashtags, image, reelScript, ideas } = generatedContent;
+  const { caption, hashtags, image, reelScript, ideas, imagePrompt } = generatedContent;
 
   const handleCopyCaption = () => {
     const fullCaption = `${caption}\n\n${hashtags.join(' ')}`;
@@ -58,9 +59,9 @@ const ContentResult: React.FC<ContentResultProps> = ({
   return (
     <div className="space-y-6">
       {/* Generated Image */}
-      {image && (
-        <div>
-          <h3 className="font-medium mb-2">Generated Visual:</h3>
+      <div>
+        <h3 className="font-medium mb-2">Generated Visual:</h3>
+        {image ? (
           <div className="mb-2 border border-gray-200 rounded-md overflow-hidden bg-gray-50">
             <AspectRatio ratio={4/5} className="bg-gray-100">
               <img 
@@ -70,17 +71,62 @@ const ContentResult: React.FC<ContentResultProps> = ({
               />
             </AspectRatio>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs"
-            onClick={() => {
-              // In a real implementation, would create a download link
-              toast.success('Image saved to your content library');
-            }}
-          >
-            Save Image
-          </Button>
+        ) : (
+          <div className="mb-2 border border-gray-200 rounded-md overflow-hidden bg-gray-50">
+            <AspectRatio ratio={4/5} className="bg-gray-100 flex items-center justify-center">
+              <p className="text-gray-400 text-center px-4">
+                {imagePrompt ? 
+                  "Image is being generated..." : 
+                  "No image prompt provided"}
+              </p>
+            </AspectRatio>
+          </div>
+        )}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-xs"
+          onClick={() => {
+            // In a real implementation, would create a download link
+            if (image) {
+              const link = document.createElement('a');
+              link.href = image;
+              link.download = 'generated-image.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              toast.success('Image saved to your device');
+            } else {
+              toast.error('No image available to save');
+            }
+          }}
+          disabled={!image}
+        >
+          Save Image
+        </Button>
+      </div>
+      
+      {/* Image Prompt */}
+      {imagePrompt && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium">Image Prompt:</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1 text-xs" 
+              onClick={() => {
+                navigator.clipboard.writeText(imagePrompt);
+                toast.success('Image prompt copied to clipboard!');
+              }}
+            >
+              <Copy size={14} />
+              <span>Copy</span>
+            </Button>
+          </div>
+          <div className="p-4 bg-gray-50 rounded-md mb-2">
+            <p className="text-sm text-gray-600">{imagePrompt}</p>
+          </div>
         </div>
       )}
       
