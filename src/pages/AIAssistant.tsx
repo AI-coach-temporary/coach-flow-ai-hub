@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import our components
 import ContentAnalysis from '@/components/ai-assistant/ContentAnalysis';
@@ -19,11 +18,6 @@ import {
   generatePlayfulHashtags,
   generateImagePrompt
 } from '@/components/ai-assistant/utils/contentGenerators';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const AIAssistant = () => {
   const [contentType, setContentType] = useState('instagram');
