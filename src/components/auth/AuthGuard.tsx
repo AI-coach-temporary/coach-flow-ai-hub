@@ -8,7 +8,7 @@ interface AuthGuardProps {
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { user, loading, bypassAuth } = useAuth();
+  const { user, loading, isDemoMode } = useAuth();
   
   if (loading) {
     return (
@@ -18,8 +18,8 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
   
-  // Allow access if auth is bypassed or the user is logged in
-  if (bypassAuth || user) {
+  // Allow access if the user is logged in OR demo mode is enabled
+  if (user || isDemoMode) {
     return <>{children}</>;
   }
   

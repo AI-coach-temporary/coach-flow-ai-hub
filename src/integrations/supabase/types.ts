@@ -102,6 +102,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_analytics: {
+        Row: {
+          content_generated: number | null
+          created_at: string
+          id: string
+          images_generated: number | null
+          last_activity: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_generated?: number | null
+          created_at?: string
+          id?: string
+          images_generated?: number | null
+          last_activity?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_generated?: number | null
+          created_at?: string
+          id?: string
+          images_generated?: number | null
+          last_activity?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_content: {
+        Row: {
+          caption: string | null
+          content_type: string
+          created_at: string
+          hashtags: string[] | null
+          id: string
+          ideas: string[] | null
+          image_prompt: string | null
+          image_url: string | null
+          reel_script: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          content_type: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          ideas?: string[] | null
+          image_prompt?: string | null
+          image_url?: string | null
+          reel_script?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          content_type?: string
+          created_at?: string
+          hashtags?: string[] | null
+          id?: string
+          ideas?: string[] | null
+          image_prompt?: string | null
+          image_url?: string | null
+          reel_script?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
